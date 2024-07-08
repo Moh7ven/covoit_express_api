@@ -10,4 +10,6 @@ const clientSchema = new mongoose.Schema({
 });
 clientSchema.plugin(uniqueValidator);
 
-export default mongoose.model("Clients", clientSchema);
+const Client = mongoose.model("Clients", clientSchema);
+
+export default Client;

@@ -4,9 +4,9 @@ const options = {
   definition: {
     openapi: "3.1.0",
     info: {
-      title: "NaNConnect API",
+      title: "Covoit'Express API",
       version: "1.0.0",
-      description: "Documentation de l'API Convoit_express",
+      description: "Documentation de l'API Covoit_express",
     },
   },
   apis: ["./routes/*.js"], // Chemin vers les routes

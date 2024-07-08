@@ -3,12 +3,14 @@ import dotenv from "dotenv";
 import cors from "cors";
 import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./swaggerConfig.js";
+import connectDB from "./config/db.js";
 
+dotenv.config();
+connectDB();
 const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 

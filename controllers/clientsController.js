@@ -11,7 +11,8 @@ export const createClient = async (req, res) => {
         status: false,
       });
     }
-
+    
+    
     // Verifier si l'utilisateur existe
     const user = await Client.findOne({ $or: [{ email }, { tel }] });
     if (user) {
@@ -40,11 +41,3 @@ export const createClient = async (req, res) => {
   }
 };
 
-export const getAllClients = async (req, res) => {
-  try {
-    const clients = await Client.find();
-    res.status(200).json(clients);
-  } catch (error) {
-    res.status(404).json({ message: error.message });
-  }
-};

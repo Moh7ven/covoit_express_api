@@ -11,8 +11,22 @@ export const createClient = async (req, res) => {
         status: false,
       });
     }
-    
-    
+
+    // Verifier la taille du mot de passe
+    if (password.length < 8 || password.length > 10) {
+      return res.status(400).json({
+        message: "Le mot de passe doit être entre 8 et 10 caractères",
+        status: false,
+      });
+    }
+
+    // verifier la taille du tel
+    if (tel.length !== 10) {
+      return res.status(400).json({
+        message: "Le numéro de tel doit être de 10 caractères",
+        status: false,
+      });
+    }
     // Verifier si l'utilisateur existe
     const user = await Client.findOne({ $or: [{ email }, { tel }] });
     if (user) {
@@ -37,7 +51,6 @@ export const createClient = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(409).json({ message: error.message });
+    res.status(500).json({ message: error.message });
   }
 };
-

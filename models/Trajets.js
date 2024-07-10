@@ -19,6 +19,7 @@ const trajetSchema = mongoose.Schema({
   lieuArrivee: { type: String, required: true },
   distance: { type: Number, required: false },
   cout: { type: Number, required: true },
+  note: { type: String, required: false },
 });
 
 const Trajets = mongoose.model("Trajets", trajetSchema);

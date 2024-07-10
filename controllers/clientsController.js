@@ -54,3 +54,47 @@ export const createClient = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const loginClient = async (req, res) => {
+  try {
+    const { tel, password } = req.body;
+
+    if (!tel || !password) {
+      return res.status(400).json({
+        message: "Veuillez renseigner tous les champs !",
+        status: false,
+      });
+    }
+
+    const client = await Client.findOne({ tel });
+    if (!client) {
+      return res.status(400).json({
+        message: "Cet utilisateur n'existe pas !",
+        status: false,
+      });
+    }
+
+    const isMatch = await bcrypt.compare(password, client.password);
+    if (!isMatch) {
+      return res.status(400).json({
+        message: "Mot de passe incorrect !",
+        status: false,
+      });
+    }
+
+    const token = jwt.sign({ id: client._id }, process.env.JWT_SECRET, {
+      expiresIn: "24h",
+    });
+    res.status(200).json({
+      data: client,
+      token,
+      status: true,
+      message: "Connexion reussie !",
+    });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ message: "Une erreur s'est produite", status: false });
+  }
+};

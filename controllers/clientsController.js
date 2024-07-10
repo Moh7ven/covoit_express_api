@@ -82,7 +82,7 @@ export const loginClient = async (req, res) => {
       });
     }
 
-    const token = jwt.sign({ id: client._id }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ clientId: client._id }, process.env.JWT_SECRET, {
       expiresIn: "24h",
     });
     res.status(200).json({
@@ -96,5 +96,25 @@ export const loginClient = async (req, res) => {
     res
       .status(500)
       .json({ message: "Une erreur s'est produite", status: false });
+  }
+};
+
+export const getUserConnected = async (req, res) => {
+  try {
+    const clientId = req.auth.clientId;
+    if (!clientId) {
+      return res
+        .status(401)
+        .json({ message: "Vous n'etes pas autorisé", status: false });
+    }
+    const client = await Client.findById(clientId);
+    if (!client) {
+      return res
+        .status(404)
+        .json({ message: "Vous n'êtes pas autoriser", status: false });
+    }
+    res.status(200).json({ data: client, status: true });
+  } catch (error) {
+    res.status(404).json({ message: error.message });
   }
 };

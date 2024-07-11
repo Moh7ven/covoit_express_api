@@ -2,6 +2,8 @@ import Client from "../models/Clients.js";
 
 
 
+
+
 export const getAllClients = async (req, res) => {
   try {
     const clients = await Client.find();

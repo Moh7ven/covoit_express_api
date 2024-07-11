@@ -118,3 +118,22 @@ export const getUserConnected = async (req, res) => {
     res.status(404).json({ message: error.message });
   }
 };
+
+export const updateClient = async (req, res) => {
+  try {
+    const clientId = req.auth.clientId;
+
+    const client = await Client.findByIdAndUpdate(clientId, req.body, {
+      new: true,
+    });
+    res.status(200).json({
+      data: client,
+      message: "Utilisateur mis à jour !",
+      status: true,
+    });
+  } catch (error) {
+    res
+      .status(404)
+      .json({ message: "Une erreur s'est produite", status: false });
+  }
+};

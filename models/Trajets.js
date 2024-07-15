@@ -13,7 +13,7 @@ const trajetSchema = mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Localites",
   },
-  date: { type: Date, required: true },
+  date: { type: String, required: true },
   heure: { type: String, required: true },
   lieuDepart: { type: String, required: true },
   lieuArrivee: { type: String, required: true },

@@ -6,6 +6,8 @@ import {
   updateClient,
   addTrajet,
   saveAsConducteur,
+  getConducteurInfos,
+  updateConducteurInfos,
 } from "../controllers/clientsController.js";
 import multer from "multer";
 import authClient from "../middlewares/authClient.js";
@@ -24,4 +26,13 @@ router.put("/update-client", upload.any(), authClient, updateClient);
 router.post("/add-trajet/", upload.any(), authClient, addTrajet);
 
 router.post("/save-as-conducteur", upload.any(), authClient, saveAsConducteur);
+
+router.get("/get-conducteur", upload.any(), authClient, getConducteurInfos);
+
+router.put(
+  "/update-conducteur",
+  upload.any(),
+  authClient,
+  updateConducteurInfos
+);
 export default router;

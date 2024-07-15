@@ -181,7 +181,11 @@ export const addTrajet = async (req, res) => {
 export const saveAsConducteur = async (req, res) => {
   try {
     const clientId = req.auth.clientId;
+
     const client = await Client.findById(clientId);
+    const verifConducteur = await Conducteurs.findOne({
+      idConducteur: clientId,
+    });
     const { immatriculation, permis, vehicule, nombrePlace } = req.body;
     if (!immatriculation || !permis || !vehicule || !nombrePlace) {
       return res.status(400).json({
@@ -200,6 +204,13 @@ export const saveAsConducteur = async (req, res) => {
     if (permisVerif(permis) === false) {
       return res.status(400).json({
         message: "Permis invalide !",
+        status: false,
+      });
+    }
+
+    if (verifConducteur) {
+      return res.status(400).json({
+        message: "Vous avez enregistrer des données de conducteur !",
         status: false,
       });
     }
@@ -233,15 +244,76 @@ export const saveAsConducteur = async (req, res) => {
   }
 };
 
-export const getConducteurForClient = async (req, res) => {
+export const getConducteurInfos = async (req, res) => {
   try {
     const clientId = req.auth.clientId;
-    const conducteur = await Conducteurs.findOne({ idConducteur: clientId });
+    const conducteur = await Conducteurs.findOne({
+      idConducteur: clientId,
+    }).populate("idConducteur");
+
+    if (!conducteur) {
+      return res.status(404).json({
+        message: "Vous n'êtes pas enregistré en tant que conducteur !",
+        status: false,
+      });
+    }
     res.status(200).json({ data: conducteur, status: true });
   } catch (error) {
     console.error(error);
     res
       .status(404)
+      .json({ message: "Une erreur s'est produite", status: false });
+  }
+};
+
+export const updateConducteurInfos = async (req, res) => {
+  try {
+    const clientId = req.auth.clientId;
+    const conducteur = await Conducteurs.findOne({
+      idConducteur: clientId,
+    });
+    if (!conducteur) {
+      return res.status(404).json({
+        message: "Vous n'etes pas autorisé !",
+        status: false,
+      });
+    }
+    const { immatriculation, permis, vehicule, nombrePlace } = req.body;
+    if (!immatriculation || !permis || !vehicule || !nombrePlace) {
+      return res.status(400).json({
+        message: "Veuillez renseigner tous les champs !",
+        status: false,
+      });
+    }
+
+    if (verifImmatricule(immatriculation) === false) {
+      return res.status(400).json({
+        message: "Immatriculation invalide !",
+        status: false,
+      });
+    }
+
+    if (permisVerif(permis) === false) {
+      return res.status(400).json({
+        message: "Permis invalide !",
+        status: false,
+      });
+    }
+
+    const updateConducteur = await Conducteurs.findOneAndUpdate(
+      { idConducteur: clientId },
+      { immatriculation, permis, vehicule, nombrePlace },
+      { new: true }
+    );
+    res.status(200).json({
+      data: updateConducteur,
+      status: true,
+      message: "Informations de conducteur modifie avec succes !",
+    });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
       .json({ message: "Une erreur s'est produite", status: false });
   }
 };

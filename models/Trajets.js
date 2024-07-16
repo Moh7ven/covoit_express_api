@@ -21,6 +21,10 @@ const trajetSchema = mongoose.Schema({
   cout: { type: Number, required: true },
   note: { type: String, required: false },
   active: { type: Boolean, default: true },
+  placeRestantes: { type: Number, required: true },
+  placeAtteint: { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
 });
 
 const Trajets = mongoose.model("Trajets", trajetSchema);

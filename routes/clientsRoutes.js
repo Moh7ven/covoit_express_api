@@ -11,6 +11,7 @@ import {
   getAllTrajet,
   getTrajetEnCours,
   getOneTrajet,
+  reserverTrajet,
 } from "../controllers/clientsController.js";
 import multer from "multer";
 import authClient from "../middlewares/authClient.js";
@@ -37,6 +38,13 @@ router.get(
   upload.any(),
   authClient,
   getOneTrajet
+);
+
+router.post(
+  "/reserver-trajet/:trajetId",
+  upload.any(),
+  authClient,
+  reserverTrajet
 );
 
 router.post("/save-as-conducteur", upload.any(), authClient, saveAsConducteur);

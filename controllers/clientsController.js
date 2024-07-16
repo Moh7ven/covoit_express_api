@@ -1,5 +1,6 @@
 import Client from "../models/Clients.js";
 import Trajets from "../models/Trajets.js";
+import TrajetsReserver from "../models/TrajetsReserver.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import Conducteurs from "../models/Conducteur.js";
@@ -190,6 +191,7 @@ export const addTrajet = async (req, res) => {
       distance,
       cout,
       note,
+      placeRestantes: verifyConducteur.nombrePlace,
     });
     res.status(201).json({
       data: trajet,
@@ -246,6 +248,73 @@ export const getOneTrajet = async (req, res) => {
     res.status(200).json({ data: oneTrajet, status: true });
   } catch (error) {}
 };
+
+export const reserverTrajet = async (req, res) => {
+  try {
+    const { trajetId } = req.params;
+    const { date, heure } = req.body;
+    const clientId = req.auth.clientId;
+
+    if (!date || !heure) {
+      return res.status(400).json({
+        message: "Veuillez renseigner tous les champs !",
+        status: false,
+      });
+    }
+
+    if (!trajetId) {
+      return res.status(400).json({
+        message: "Aucune trajet selectionné !",
+        status: false,
+      });
+    }
+    const seeTrajetReserve = await TrajetsReserver.findOne({
+      idTrajet: trajetId,
+    });
+    if (seeTrajetReserve) {
+      return res.status(400).json({
+        message: "Vous avec déjà reserver ce trajet !",
+        status: false,
+      });
+    }
+
+    const verifyNomberPlace = await Trajets.findOne({
+      _id: trajetId,
+    });
+
+    if (verifyNomberPlace.placeRestantes === 0) {
+      return res.status(400).json({
+        message: "Il n'y a plus de place disponible !",
+        status: false,
+      });
+    }
+
+    const trajetReserver = await TrajetsReserver.create({
+      idTrajet: trajetId,
+      idClient: clientId,
+      date,
+      heure,
+    });
+
+    await Trajets.findOneAndUpdate(
+      { _id: trajetId },
+      { $inc: { placeRestantes: -1 } }
+    );
+
+    res.status(201).json({
+      data: trajetReserver,
+      status: true,
+      message: "Trajet reserve avec succes !",
+    });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(404)
+      .json({ message: "Une erreur s'est produite", status: false });
+  }
+};
+
+
 
 export const saveAsConducteur = async (req, res) => {
   try {

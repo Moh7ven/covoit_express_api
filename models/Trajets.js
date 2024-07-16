@@ -20,6 +20,7 @@ const trajetSchema = mongoose.Schema({
   distance: { type: Number, required: false },
   cout: { type: Number, required: true },
   note: { type: String, required: false },
+  active: { type: Boolean, default: true },
 });
 
 const Trajets = mongoose.model("Trajets", trajetSchema);

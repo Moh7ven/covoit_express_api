@@ -8,6 +8,7 @@ import {
   saveAsConducteur,
   getConducteurInfos,
   updateConducteurInfos,
+  getAllTrajet,
 } from "../controllers/clientsController.js";
 import multer from "multer";
 import authClient from "../middlewares/authClient.js";
@@ -23,7 +24,11 @@ router.get("/get-client-connected", upload.any(), authClient, getUserConnected);
 
 router.put("/update-client", upload.any(), authClient, updateClient);
 
-router.post("/add-trajet/", upload.any(), authClient, addTrajet);
+router.post("/add-trajet", upload.any(), authClient, addTrajet);
+
+router.get("/get-all-trajets", upload.any(), authClient, getAllTrajet);
+
+router.get("/get-trajets-en-cours", upload.any(), authClient, getAllTrajet);
 
 router.post("/save-as-conducteur", upload.any(), authClient, saveAsConducteur);
 

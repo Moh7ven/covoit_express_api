@@ -1,7 +1,7 @@
 import Client from "../models/Clients.js";
+import Trajets from "../models/Trajets.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import Trajets from "../models/Trajets.js";
 import Conducteurs from "../models/Conducteur.js";
 import verifImmatricule from "../utils/immatricule.js";
 import permisVerif from "../utils/permisVerif.js";
@@ -149,14 +149,37 @@ export const addTrajet = async (req, res) => {
     const { date, heure, lieuDepart, lieuArrivee, distance, cout, note } =
       req.body;
     const clientId = req.auth.clientId;
-    const client = await Client.findById(clientId);
 
-    if (!date || !heure || !lieuDepart || !lieuArrivee || !distance || !cout) {
+    if (!date || !heure || !lieuDepart || !lieuArrivee || !cout) {
       return res.status(400).json({
         message: "Veuillez renseigner tous les champs !",
         status: false,
       });
     }
+
+    const verifyConducteur = await Conducteurs.findOne({
+      idConducteur: clientId,
+    });
+    if (!verifyConducteur) {
+      return res.status(400).json({
+        message:
+          "Vous n'etes pas autorisé !, veuillez enregistrer vos informations en tant que conducteur",
+        status: false,
+      });
+    }
+
+    const verifyTrajet = await Trajets.findOne({
+      idConducteur: clientId,
+      active: true,
+      date,
+    });
+    if (verifyTrajet) {
+      return res.status(400).json({
+        message: "Vous devez terminer votre trajet en cours !",
+        status: false,
+      });
+    }
+
     const trajet = await Trajets.create({
       idConducteur: clientId,
       idClient: clientId,
@@ -175,6 +198,34 @@ export const addTrajet = async (req, res) => {
     });
   } catch (error) {
     res.status(404).json({ message: error.message, status: false });
+  }
+};
+
+export const getTrajetEnCours = async (req, res) => {
+  try {
+    const clientId = req.auth.clientId;
+    const trajetEnCours = await Trajets.findOne({
+      idClient: clientId,
+      active: true,
+    });
+    res.status(200).json({ data: trajetEnCours, status: true });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(404)
+      .json({ message: "Une erreur s'est produite", status: false });
+  }
+};
+
+export const getAllTrajet = async (req, res) => {
+  try {
+    const allTrajet = await Trajets.find();
+    res.status(200).json({ data: allTrajet, status: true });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(404)
+      .json({ message: "Une erreur s'est produite", status: false });
   }
 };
 

@@ -229,6 +229,24 @@ export const getAllTrajet = async (req, res) => {
   }
 };
 
+export const getOneTrajet = async (req, res) => {
+  try {
+    const { trajetId } = req.params;
+    console.log(trajetId);
+    if (!trajetId) {
+      return res.status(400).json({
+        message: "Aucune trajet en cours  selectionné !",
+        status: false,
+      });
+    }
+    const oneTrajet = await Trajets.find({
+      _id: trajetId,
+      active: true,
+    });
+    res.status(200).json({ data: oneTrajet, status: true });
+  } catch (error) {}
+};
+
 export const saveAsConducteur = async (req, res) => {
   try {
     const clientId = req.auth.clientId;

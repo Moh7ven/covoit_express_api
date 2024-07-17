@@ -361,6 +361,16 @@ export const annulerTrajetReserver = async (req, res) => {
       });
     }
 
+    const verifyTrajetTerminer = await Trajets.findOne({
+      _id: trajetId,
+    });
+    if (verifyTrajetTerminer.terminer === true) {
+      return res.status(400).json({
+        message: "Ce trajet est terminé !",
+        status: false,
+      });
+    }
+
     const updateTrajetReserver = await TrajetsReserver.findOneAndUpdate(
       { _id: trajetReserver._id },
       { $set: { annuler: true } }
@@ -382,6 +392,8 @@ export const annulerTrajetReserver = async (req, res) => {
       .json({ message: "Une erreur s'est produite", status: false });
   }
 };
+
+
 
 export const getTrajetReserver = async (req, res) => {
   try {

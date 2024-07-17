@@ -337,6 +337,30 @@ export const annulerTrajetReserver = async (req, res) => {
         status: false,
       });
     }
+
+    const verifyTrajetIsActive = await Trajets.findOne({
+      _id: trajetId,
+    });
+    if (verifyTrajetIsActive.active === false) {
+      return res.status(400).json({
+        message:
+          "Ce trajet n'est plus disponible, le conducteur à l'a surement annulé !",
+        status: false,
+      });
+    }
+
+    const verifyTrajetAnnuler = await TrajetsReserver.findOne({
+      idTrajet: trajetId,
+      idClient: clientId,
+      annuler: true,
+    });
+    if (verifyTrajetAnnuler) {
+      return res.status(400).json({
+        message: "Vous avez déjà annuler ce trajet !",
+        status: false,
+      });
+    }
+
     const updateTrajetReserver = await TrajetsReserver.findOneAndUpdate(
       { _id: trajetReserver._id },
       { $set: { annuler: true } }

@@ -234,7 +234,6 @@ export const getAllTrajet = async (req, res) => {
 export const getOneTrajet = async (req, res) => {
   try {
     const { trajetId } = req.params;
-    console.log(trajetId);
     if (!trajetId) {
       return res.status(400).json({
         message: "Aucune trajet en cours  selectionné !",
@@ -268,6 +267,17 @@ export const reserverTrajet = async (req, res) => {
         status: false,
       });
     }
+
+    const existingTrajet = await Trajets.findOne({
+      _id: trajetId,
+    });
+    if (!existingTrajet) {
+      return res.status(400).json({
+        message: "Ce trajet n'existe pas !",
+        status: false,
+      });
+    }
+
     const seeTrajetReserve = await TrajetsReserver.findOne({
       idTrajet: trajetId,
     });
@@ -314,7 +324,67 @@ export const reserverTrajet = async (req, res) => {
   }
 };
 
+export const annulerTrajetReserver = async (req, res) => {
+  try {
+    const { trajetId } = req.params;
+    const clientId = req.auth.clientId;
+    const trajetReserver = await TrajetsReserver.findOne({
+      idTrajet: trajetId,
+    });
+    if (!trajetReserver) {
+      return res.status(400).json({
+        message: "Aucun trajet reserve !",
+        status: false,
+      });
+    }
+    const updateTrajetReserver = await TrajetsReserver.findOneAndUpdate(
+      { _id: trajetReserver._id },
+      { $set: { annuler: true } }
+    );
 
+    await Trajets.findOneAndUpdate(
+      { _id: trajetId },
+      { $inc: { placeRestantes: 1 } }
+    );
+    res.status(200).json({
+      data: updateTrajetReserver,
+      status: true,
+      message: "Trajet annuler avec succes !",
+    });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(404)
+      .json({ message: "Une erreur s'est produite", status: false });
+  }
+};
+
+export const getTrajetReserver = async (req, res) => {
+  try {
+    const clientId = req.auth.clientId;
+    const trajetReserver = await TrajetsReserver.find({
+      idClient: clientId,
+      active: true,
+    })
+      .populate("idTrajet")
+      .populate("idClient");
+
+    if (trajetReserver.length === 0) {
+      return res.status(400).json({
+        data: [],
+        message: "Aucun trajet reserve !",
+        status: false,
+      });
+    }
+
+    res.status(200).json({ data: trajetReserver, status: true });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(404)
+      .json({ message: "Une erreur s'est produite", status: false });
+  }
+};
 
 export const saveAsConducteur = async (req, res) => {
   try {

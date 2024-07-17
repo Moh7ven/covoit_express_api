@@ -13,13 +13,18 @@ const trajetSchema = mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Localites",
   },
-  date: { type: Date, required: true },
+  date: { type: String, required: true },
   heure: { type: String, required: true },
   lieuDepart: { type: String, required: true },
   lieuArrivee: { type: String, required: true },
   distance: { type: Number, required: false },
   cout: { type: Number, required: true },
   note: { type: String, required: false },
+  active: { type: Boolean, default: true },
+  placeRestantes: { type: Number, required: true },
+  placeAtteint: { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
 });
 
 const Trajets = mongoose.model("Trajets", trajetSchema);

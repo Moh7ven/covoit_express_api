@@ -8,6 +8,7 @@ const conducteurSchema = mongoose.Schema({
   immatriculation: { type: String, required: true },
   permis: { type: String, required: true },
   vehicule: { type: String, required: true },
+  colorVehicule: { type: String, required: true },
   nombrePlace: { type: Number, required: true },
 });
 

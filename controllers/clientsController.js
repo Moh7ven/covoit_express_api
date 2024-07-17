@@ -206,7 +206,7 @@ export const addTrajet = async (req, res) => {
 export const getTrajetEnCours = async (req, res) => {
   try {
     const clientId = req.auth.clientId;
-    const trajetEnCours = await Trajets.findOne({
+    const trajetEnCours = await TrajetsReserver.findOne({
       idClient: clientId,
       active: true,
     });
@@ -279,7 +279,7 @@ export const reserverTrajet = async (req, res) => {
     }
 
     const seeTrajetReserve = await TrajetsReserver.findOne({
-      idTrajet: trajetId,
+      idClient: clientId,
     });
     if (seeTrajetReserve) {
       return res.status(400).json({
@@ -393,7 +393,34 @@ export const annulerTrajetReserver = async (req, res) => {
   }
 };
 
-
+export const getAllTrajetsAnnuler = async (req, res) => {
+  try {
+    const clientId = req.auth.clientId;
+    const trajetAnnuler = await TrajetsReserver.find({
+      idClient: clientId,
+      annuler: true,
+    })
+      .populate("idTrajet")
+      .populate("idClient");
+    if (trajetAnnuler.length === 0) {
+      return res.status(400).json({
+        data: [],
+        message: "Aucun trajet annuler !",
+        status: false,
+      });
+    }
+    res.status(200).json({
+      data: trajetAnnuler,
+      message: "Donnée recupéres ",
+      status: true,
+    });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(404)
+      .json({ message: "Une erreur s'est produite", status: false });
+  }
+};
 
 export const getTrajetReserver = async (req, res) => {
   try {

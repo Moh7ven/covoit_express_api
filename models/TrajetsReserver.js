@@ -11,7 +11,6 @@ const trajetReserverSchema = mongoose.Schema({
   },
   date: { type: String, required: true },
   heure: { type: String, required: true },
-  active: { type: Boolean, default: true },
   annuler: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },

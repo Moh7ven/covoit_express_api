@@ -340,7 +340,8 @@ export const annulerTrajetReserver = async (req, res) => {
 
     const verifyTrajetIsActive = await Trajets.findOne({
       _id: trajetId,
-    });
+    }).populate("active");
+    console.log(verifyTrajetIsActive);
     if (verifyTrajetIsActive.active === false) {
       return res.status(400).json({
         message:
@@ -425,22 +426,79 @@ export const getAllTrajetsAnnuler = async (req, res) => {
 export const getTrajetReserver = async (req, res) => {
   try {
     const clientId = req.auth.clientId;
+    /* const trajetReserver = await TrajetsReserver.find({
+      idClient: clientId,
+    }).populate({
+      path: "idTrajet",
+      select: "active",
+    }); */
+
     const trajetReserver = await TrajetsReserver.find({
       idClient: clientId,
-      active: true,
-    })
-      .populate("idTrajet")
-      .populate("idClient");
+    }).populate("idTrajet");
+
+    const trajetReserverActive = trajetReserver.map((trajet) =>
+      trajet.idTrajet.active === true ? true : false
+    );
+
+    const trajetTerminer = trajetReserver.map((trajet) =>
+      trajet.idTrajet.terminer === true ? true : false
+    );
 
     if (trajetReserver.length === 0) {
       return res.status(400).json({
         data: [],
-        message: "Aucun trajet reserve !",
+        message:
+          "Aucun trajet reserve ! , trajet terminer ou annuler par le conducteur",
+        status: false,
+      });
+    }
+
+    if (trajetReserverActive === false) {
+      return res.status(400).json({
+        message: "Trajet annuler par le conducteur !",
+        status: false,
+      });
+    } else if (trajetTerminer === true) {
+      return res.status(400).json({
+        message: "Trajet terminé !",
         status: false,
       });
     }
 
     res.status(200).json({ data: trajetReserver, status: true });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(404)
+      .json({ message: "Une erreur s'est produite", status: false });
+  }
+};
+
+export const annulerTrajetAjouter = async (req, res) => {
+  try {
+    const { trajetId } = req.params;
+    const clientId = req.auth.clientId;
+    const trajet = await Trajets.findOne({
+      idTrajet: trajetId,
+      idConducteur: clientId,
+    });
+    if (!trajet) {
+      return res.status(400).json({
+        message: "Vous n'avez enregistré  aucun trajet!",
+        status: false,
+      });
+    }
+
+    const updateTrajet = await Trajets.findOneAndUpdate(
+      { _id: trajetId },
+      { $set: { active: false } }
+    );
+    res.status(200).json({
+      data: updateTrajet,
+      status: true,
+      message: "Trajet annuler avec succes !",
+    });
   } catch (error) {
     console.error(error);
     res

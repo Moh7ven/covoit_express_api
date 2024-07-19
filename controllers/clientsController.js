@@ -656,3 +656,40 @@ export const updateConducteurInfos = async (req, res) => {
       .json({ message: "Une erreur s'est produite", status: false });
   }
 };
+
+export const searchTrajet = async (req, res) => {
+  try {
+    const { lieuDepart, lieuArrivee, cout } = req.body;
+    const tabCout = cout.split("-");
+    const coutMin = parseInt(tabCout[0]);
+    const coutMax = parseInt(tabCout[1]);
+    ///Recherche en fonction du cout aussi /A faire
+
+    if (!lieuDepart || !lieuArrivee) {
+      return res.status(400).json({
+        message: "Veuillez renseigner tous les champs !",
+        status: false,
+      });
+    }
+
+    const trajets = await Trajets.find({
+      lieuDepart: { $regex: lieuDepart, $options: "i" },
+      lieuArrivee: { $regex: lieuArrivee, $options: "i" },
+    });
+
+    if (!trajets) {
+      return res.status(404).json({
+        message: "Aucun trajet trouvé !",
+        status: false,
+      });
+    }
+    res
+      .status(200)
+      .json({ data: trajets, message: "Trajet trouvé !", status: true });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ message: "Une erreur s'est produite", status: false });
+  }
+};

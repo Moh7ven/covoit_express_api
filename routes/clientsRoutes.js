@@ -15,6 +15,7 @@ import {
   getTrajetReserver,
   annulerTrajetReserver,
   getAllTrajetsAnnuler,
+  searchTrajet,
 } from "../controllers/clientsController.js";
 import multer from "multer";
 import authClient from "../middlewares/authClient.js";
@@ -76,4 +77,6 @@ router.put(
   authClient,
   updateConducteurInfos
 );
+
+router.post("/search-trajet", upload.any(), searchTrajet);
 export default router;

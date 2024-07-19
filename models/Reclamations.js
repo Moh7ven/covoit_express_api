@@ -5,8 +5,9 @@ const reclamationsSchema = mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Clients",
   },
-  type: { type: String, required: true },
+  
   description: { type: String, required: true },
+  texte: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
 });
 

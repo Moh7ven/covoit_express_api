@@ -7,6 +7,7 @@ import connectDB from "./config/db.js";
 import clientRoutes from "./routes/clientsRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import localiteRoutes from "./routes/localiteRoutes.js";
+import reclamationsRoutes from "./routes/reclamationsRoutes.js";
 
 const apiURL = "/api/v1";
 
@@ -24,4 +25,5 @@ app.use(cors());
 app.use(`${apiURL}/clients/`, clientRoutes);
 app.use(`${apiURL}/admin/`, adminRoutes);
 app.use(`${apiURL}/localites/`, localiteRoutes);
+app.use(`${apiURL}/reclamations/`, reclamationsRoutes);
 export default app;

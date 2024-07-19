@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
 
 const localiteSchema = mongoose.Schema({
-  codePostal: { type: String, required: true },
-  region: { type: String, required: true },
+  // codePostal: { type: String, required: true },
+  // region: { type: String, required: true },
   ville: { type: String, required: true },
 });
 

@@ -283,7 +283,17 @@ export const reserverTrajet = async (req, res) => {
     });
     if (seeTrajetReserve) {
       return res.status(400).json({
-        message: "Vous avec déjà reserver ce trajet !",
+        message: "Vous avez déjà reserver ce trajet !",
+        status: false,
+      });
+    }
+
+    const isConducteur = await Conducteurs.findOne({
+      idConducteur: clientId,
+    });
+    if (isConducteur) {
+      return res.status(400).json({
+        message: "Vous ne pouvez pas reserver votre propre trajet !",
         status: false,
       });
     }
@@ -341,7 +351,7 @@ export const annulerTrajetReserver = async (req, res) => {
     const verifyTrajetIsActive = await Trajets.findOne({
       _id: trajetId,
     }).populate("active");
-    console.log(verifyTrajetIsActive);
+
     if (verifyTrajetIsActive.active === false) {
       return res.status(400).json({
         message:

@@ -486,6 +486,35 @@ export const getTrajetReserver = async (req, res) => {
   }
 };
 
+export const getAllClientReserveMyTrajet = async (req, res) => {
+  try {
+    const clientId = req.auth.clientId;
+    const { trajetId } = req.params;
+    const trajetReserver = await TrajetsReserver.find({
+      idConducteur: clientId,
+      idTrajet: trajetId,
+    }).populate("idClient");
+
+    if (trajetReserver.length === 0) {
+      return res.status(400).json({
+        data: [],
+        message: "Aucun client pour ce trajet !",
+        status: false,
+      });
+    }
+
+    res.status(200).json({
+      data: trajetReserver,
+      status: true,
+    });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(404)
+      .json({ message: "Une erreur s'est produite", status: false });
+  }
+};
+
 export const annulerTrajetAjouter = async (req, res) => {
   try {
     const { trajetId } = req.params;
@@ -748,6 +777,8 @@ export const searchTrajet = async (req, res) => {
 export const historiqueDepenses = async (req, res) => {
   try {
     const clientId = req.auth.clientId;
+
+    //Historique somme depensée
     const historiqueDepClient = await TrajetsReserver.find({
       idClient: clientId,
     }).populate("idTrajet");
@@ -777,4 +808,39 @@ export const historiqueDepenses = async (req, res) => {
       .status(500)
       .json({ message: "Une erreur s'est produite", status: false });
   }
+};
+
+export const historiqueGain = async (req, res) => {
+  const clientId = req.auth.clientId;
+
+  //Historique somme gagné
+  const historqueGainClient = await TrajetsReserver.find({
+    idClient: clientId,
+  }).populate("idTrajet");
+
+  if (!historqueGainClient) {
+    return res.status(404).json({
+      message: "Aucun trajet reserve !",
+      status: false,
+    });
+  }
+
+  let recupGain = [];
+
+  historqueGainClient.map((trajet) => {
+    if (trajet.idTrajet.terminer === true) {
+      recupGain.push(trajet.idTrajet.cout);
+    }
+  });
+
+  const sommeGagne = recupGain.reduce((a, b) => a + b, 0);
+
+  console.log(recupGain, sommeGagne);
+
+  res.status(200).json({
+    data: historqueGainClient,
+    sommeGagne: sommeGagne,
+    message: "Historique !",
+    status: true,
+  });
 };

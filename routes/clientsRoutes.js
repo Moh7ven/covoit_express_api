@@ -18,6 +18,7 @@ import {
   searchTrajet,
   terminerTrajet,
   historiqueDepenses,
+  historiqueGain,
 } from "../controllers/clientsController.js";
 import multer from "multer";
 import authClient from "../middlewares/authClient.js";
@@ -93,6 +94,8 @@ router.get(
   authClient,
   historiqueDepenses
 );
+
+router.get("/historique/gains", upload.any(), authClient, historiqueGain);
 
 router.post("/search-trajet", upload.any(), searchTrajet);
 export default router;

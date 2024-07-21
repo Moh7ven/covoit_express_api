@@ -490,11 +490,18 @@ export const getAllClientReserveMyTrajet = async (req, res) => {
   try {
     const clientId = req.auth.clientId;
     const { trajetId } = req.params;
-    const trajetReserver = await TrajetsReserver.find({
-      idConducteur: clientId,
-      idTrajet: trajetId,
-    }).populate("idClient");
 
+    const trajetReserver = await TrajetsReserver.find({
+      idTrajet: trajetId,
+    })
+      .populate("idTrajet")
+      .populate("idClient");
+
+    const filtre = trajetReserver.filter((trajet) =>
+      trajet.idTrajet.idConducteur === clientId ? trajet.idClient : []
+    );
+
+    console.log(filtre);
     if (trajetReserver.length === 0) {
       return res.status(400).json({
         data: [],
@@ -504,7 +511,7 @@ export const getAllClientReserveMyTrajet = async (req, res) => {
     }
 
     res.status(200).json({
-      data: trajetReserver,
+      data: filtre,
       status: true,
     });
   } catch (error) {

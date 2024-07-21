@@ -19,6 +19,7 @@ import {
   terminerTrajet,
   historiqueDepenses,
   historiqueGain,
+  getAllClientReserveMyTrajet,
 } from "../controllers/clientsController.js";
 import multer from "multer";
 import authClient from "../middlewares/authClient.js";
@@ -55,6 +56,13 @@ router.post(
 );
 
 router.get("/get-trajets-reserve", upload.any(), authClient, getTrajetReserver);
+
+router.get(
+  "/get-client-reserve-my-trajet/:trajetId",
+  upload.any(),
+  authClient,
+  getAllClientReserveMyTrajet
+);
 
 router.put(
   "/annuler-trajet-reserver/:trajetId",

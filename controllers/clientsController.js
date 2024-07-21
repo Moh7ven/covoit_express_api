@@ -206,7 +206,7 @@ export const addTrajet = async (req, res) => {
 export const getTrajetEnCours = async (req, res) => {
   try {
     const clientId = req.auth.clientId;
-    const trajetEnCours = await Trajets.findOne({
+    const trajetEnCours = await TrajetsReserver.findOne({
       idClient: clientId,
       active: true,
     });
@@ -234,7 +234,6 @@ export const getAllTrajet = async (req, res) => {
 export const getOneTrajet = async (req, res) => {
   try {
     const { trajetId } = req.params;
-    console.log(trajetId);
     if (!trajetId) {
       return res.status(400).json({
         message: "Aucune trajet en cours  selectionné !",
@@ -268,12 +267,34 @@ export const reserverTrajet = async (req, res) => {
         status: false,
       });
     }
+
+    const existingTrajet = await Trajets.findOne({
+      _id: trajetId,
+    });
+    if (!existingTrajet) {
+      return res.status(400).json({
+        message: "Ce trajet n'existe pas !",
+        status: false,
+      });
+    }
+
     const seeTrajetReserve = await TrajetsReserver.findOne({
+      idClient: clientId,
       idTrajet: trajetId,
     });
     if (seeTrajetReserve) {
       return res.status(400).json({
-        message: "Vous avec déjà reserver ce trajet !",
+        message: "Vous avez déjà reserver ce trajet !",
+        status: false,
+      });
+    }
+
+    const isConducteur = await Conducteurs.findOne({
+      idConducteur: clientId,
+    });
+    if (isConducteur) {
+      return res.status(400).json({
+        message: "Vous ne pouvez pas reserver votre propre trajet !",
         status: false,
       });
     }
@@ -314,7 +335,260 @@ export const reserverTrajet = async (req, res) => {
   }
 };
 
+export const annulerTrajetReserver = async (req, res) => {
+  try {
+    const { trajetId } = req.params;
+    const clientId = req.auth.clientId;
+    const trajetReserver = await TrajetsReserver.findOne({
+      idTrajet: trajetId,
+    });
+    if (!trajetReserver) {
+      return res.status(400).json({
+        message: "Aucun trajet reserve !",
+        status: false,
+      });
+    }
 
+    const verifyTrajetIsActive = await Trajets.findOne({
+      _id: trajetId,
+    }).populate("active");
+
+    if (verifyTrajetIsActive.active === false) {
+      return res.status(400).json({
+        message:
+          "Ce trajet n'est plus disponible, le conducteur à l'a surement annulé !",
+        status: false,
+      });
+    }
+
+    const verifyTrajetAnnuler = await TrajetsReserver.findOne({
+      idTrajet: trajetId,
+      idClient: clientId,
+      annuler: true,
+    });
+    if (verifyTrajetAnnuler) {
+      return res.status(400).json({
+        message: "Vous avez déjà annuler ce trajet !",
+        status: false,
+      });
+    }
+
+    const verifyTrajetTerminer = await Trajets.findOne({
+      _id: trajetId,
+    });
+    if (verifyTrajetTerminer.terminer === true) {
+      return res.status(400).json({
+        message: "Ce trajet est terminé !",
+        status: false,
+      });
+    }
+
+    const updateTrajetReserver = await TrajetsReserver.findOneAndUpdate(
+      { _id: trajetReserver._id },
+      { $set: { annuler: true } }
+    );
+
+    await Trajets.findOneAndUpdate(
+      { _id: trajetId },
+      { $inc: { placeRestantes: 1 } }
+    );
+    res.status(200).json({
+      data: updateTrajetReserver,
+      status: true,
+      message: "Trajet annuler avec succes !",
+    });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(404)
+      .json({ message: "Une erreur s'est produite", status: false });
+  }
+};
+
+export const getAllTrajetsAnnuler = async (req, res) => {
+  try {
+    const clientId = req.auth.clientId;
+    const trajetAnnuler = await TrajetsReserver.find({
+      idClient: clientId,
+      annuler: true,
+    })
+      .populate("idTrajet")
+      .populate("idClient");
+    if (trajetAnnuler.length === 0) {
+      return res.status(400).json({
+        data: [],
+        message: "Aucun trajet annuler !",
+        status: false,
+      });
+    }
+    res.status(200).json({
+      data: trajetAnnuler,
+      message: "Donnée recupéres ",
+      status: true,
+    });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(404)
+      .json({ message: "Une erreur s'est produite", status: false });
+  }
+};
+
+export const getTrajetReserver = async (req, res) => {
+  try {
+    const clientId = req.auth.clientId;
+    /* const trajetReserver = await TrajetsReserver.find({
+      idClient: clientId,
+    }).populate({
+      path: "idTrajet",
+      select: "active",
+    }); */
+
+    const trajetReserver = await TrajetsReserver.find({
+      idClient: clientId,
+    }).populate("idTrajet");
+
+    const trajetReserverActive = trajetReserver.map((trajet) =>
+      trajet.idTrajet.active === true ? true : false
+    );
+
+    const trajetTerminer = trajetReserver.map((trajet) =>
+      trajet.idTrajet.terminer === true ? true : false
+    );
+
+    if (trajetReserver.length === 0) {
+      return res.status(400).json({
+        data: [],
+        message:
+          "Aucun trajet reserve ! , trajet terminer ou annuler par le conducteur",
+        status: false,
+      });
+    }
+
+    if (trajetReserverActive === false) {
+      return res.status(400).json({
+        message: "Trajet annuler par le conducteur !",
+        status: false,
+      });
+    } else if (trajetTerminer === true) {
+      return res.status(400).json({
+        message: "Trajet terminé !",
+        status: false,
+      });
+    }
+
+    res.status(200).json({ data: trajetReserver, status: true });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(404)
+      .json({ message: "Une erreur s'est produite", status: false });
+  }
+};
+
+export const getAllClientReserveMyTrajet = async (req, res) => {
+  try {
+    const clientId = req.auth.clientId;
+    const { trajetId } = req.params;
+
+    const trajetReserver = await TrajetsReserver.find({
+      idTrajet: trajetId,
+    })
+      .populate("idTrajet")
+      .populate("idClient");
+
+    const filtre = trajetReserver.filter((trajet) =>
+      trajet.idTrajet.idConducteur === clientId ? trajet.idClient : []
+    );
+
+    if (trajetReserver.length === 0) {
+      return res.status(400).json({
+        data: [],
+        message: "Aucun client pour ce trajet !",
+        status: false,
+      });
+    }
+
+    res.status(200).json({
+      data: filtre,
+      status: true,
+    });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(404)
+      .json({ message: "Une erreur s'est produite", status: false });
+  }
+};
+
+export const annulerTrajetAjouter = async (req, res) => {
+  try {
+    const { trajetId } = req.params;
+    const clientId = req.auth.clientId;
+    const trajet = await Trajets.findOne({
+      idTrajet: trajetId,
+      idConducteur: clientId,
+    });
+    if (!trajet) {
+      return res.status(400).json({
+        message: "Vous n'avez enregistré  aucun trajet!",
+        status: false,
+      });
+    }
+
+    const updateTrajet = await Trajets.findOneAndUpdate(
+      { _id: trajetId },
+      { $set: { active: false } }
+    );
+    res.status(200).json({
+      data: updateTrajet,
+      status: true,
+      message: "Trajet annuler avec succes !",
+    });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(404)
+      .json({ message: "Une erreur s'est produite", status: false });
+  }
+};
+
+export const terminerTrajet = async (req, res) => {
+  try {
+    const { trajetId } = req.params;
+    const clientId = req.auth.clientId;
+    if (!trajetId) {
+      return res.status(400).json({
+        message: "Aucune trajet selectionné !",
+        status: false,
+      });
+    }
+    const trajet = await Trajets.findOne({
+      _id: trajetId,
+      idConducteur: clientId,
+    });
+    if (!trajet) {
+      return res.status(400).json({
+        message: "Vous n'avez enregistré  aucun trajet!",
+        status: false,
+      });
+    }
+    const updateTrajet = await Trajets.findOneAndUpdate(
+      { _id: trajetId },
+      { $set: { terminer: true, active: false } }
+    );
+    res.status(200).json({
+      data: updateTrajet,
+      status: true,
+      message: "Trajet terminé avec succes !",
+    });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(404)
+      .json({ message: "Une erreur s'est produite", status: false });
+  }
+};
 
 export const saveAsConducteur = async (req, res) => {
   try {
@@ -454,4 +728,125 @@ export const updateConducteurInfos = async (req, res) => {
       .status(500)
       .json({ message: "Une erreur s'est produite", status: false });
   }
+};
+
+export const searchTrajet = async (req, res) => {
+  try {
+    const { lieuDepart, lieuArrivee, cout } = req.body;
+    const tabCout = cout.split("-");
+    const coutMin = parseInt(tabCout[0]);
+    const coutMax = parseInt(tabCout[1]);
+
+    // Recherche en fonction du cout aussi / A faire
+
+    if (!lieuDepart || !lieuArrivee) {
+      return res.status(400).json({
+        message: "Veuillez renseigner tous les champs !",
+        status: false,
+      });
+    }
+
+    const trajets = await Trajets.find({
+      lieuDepart: { $regex: lieuDepart, $options: "i" },
+      lieuArrivee: { $regex: lieuArrivee, $options: "i" },
+    });
+
+    if (!trajets) {
+      return res.status(404).json({
+        message: "Aucun trajet trouvé !",
+        status: false,
+      });
+    }
+
+    const trajetsFiltre = trajets.filter((trajet) => {
+      return trajet.cout >= coutMin && trajet.cout <= coutMax;
+    });
+
+    if (trajetsFiltre.length === 0) {
+      return res.status(404).json({
+        message: "Aucun trajet correspondant !",
+        status: false,
+      });
+    }
+
+    res
+      .status(200)
+      .json({ data: trajets, message: "Trajet trouvé !", status: true });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ message: "Une erreur s'est produite", status: false });
+  }
+};
+
+export const historiqueDepenses = async (req, res) => {
+  try {
+    const clientId = req.auth.clientId;
+
+    //Historique somme depensée
+    const historiqueDepClient = await TrajetsReserver.find({
+      idClient: clientId,
+    }).populate("idTrajet");
+
+    if (!historiqueDepClient) {
+      return res.status(404).json({
+        message: "Aucun trajet reserve !",
+        status: false,
+      });
+    }
+
+    const recupDepense = historiqueDepClient.map(
+      (trajet) => trajet.idTrajet.cout
+    );
+
+    const sommeDepense = recupDepense.reduce((a, b) => a + b, 0);
+
+    res.status(200).json({
+      data: historiqueDepClient,
+      sommeDepense: sommeDepense,
+      message: "Historique !",
+      status: true,
+    });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ message: "Une erreur s'est produite", status: false });
+  }
+};
+
+export const historiqueGain = async (req, res) => {
+  const clientId = req.auth.clientId;
+
+  //Historique somme gagné
+  const historqueGainClient = await TrajetsReserver.find({
+    idClient: clientId,
+  }).populate("idTrajet");
+
+  if (!historqueGainClient) {
+    return res.status(404).json({
+      message: "Aucun trajet reserve !",
+      status: false,
+    });
+  }
+
+  let recupGain = [];
+
+  historqueGainClient.map((trajet) => {
+    if (trajet.idTrajet.terminer === true) {
+      recupGain.push(trajet.idTrajet.cout);
+    }
+  });
+
+  const sommeGagne = recupGain.reduce((a, b) => a + b, 0);
+
+  console.log(recupGain, sommeGagne);
+
+  res.status(200).json({
+    data: historqueGainClient,
+    sommeGagne: sommeGagne,
+    message: "Historique !",
+    status: true,
+  });
 };

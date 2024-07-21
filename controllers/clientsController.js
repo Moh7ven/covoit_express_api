@@ -501,7 +501,6 @@ export const getAllClientReserveMyTrajet = async (req, res) => {
       trajet.idTrajet.idConducteur === clientId ? trajet.idClient : []
     );
 
-    console.log(filtre);
     if (trajetReserver.length === 0) {
       return res.status(400).json({
         data: [],

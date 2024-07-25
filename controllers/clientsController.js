@@ -341,6 +341,7 @@ export const annulerTrajetReserver = async (req, res) => {
     const clientId = req.auth.clientId;
     const trajetReserver = await TrajetsReserver.findOne({
       idTrajet: trajetId,
+      annuler: false,
     });
     if (!trajetReserver) {
       return res.status(400).json({
@@ -385,7 +386,8 @@ export const annulerTrajetReserver = async (req, res) => {
 
     const updateTrajetReserver = await TrajetsReserver.findOneAndUpdate(
       { _id: trajetReserver._id },
-      { $set: { annuler: true } }
+      { $set: { annuler: true } },
+      { new: true }
     );
 
     await Trajets.findOneAndUpdate(
@@ -446,6 +448,7 @@ export const getTrajetReserver = async (req, res) => {
 
     const trajetReserver = await TrajetsReserver.find({
       idClient: clientId,
+      annuler: false,
     }).populate("idTrajet");
 
     const trajetReserverActive = trajetReserver.map((trajet) =>
@@ -749,7 +752,9 @@ export const searchTrajet = async (req, res) => {
     const trajets = await Trajets.find({
       lieuDepart: { $regex: lieuDepart, $options: "i" },
       lieuArrivee: { $regex: lieuArrivee, $options: "i" },
-    });
+    })
+      .populate("idClient")
+      .populate("idConducteur");
 
     if (!trajets) {
       return res.status(404).json({

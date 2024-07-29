@@ -601,8 +601,15 @@ export const saveAsConducteur = async (req, res) => {
     const verifConducteur = await Conducteurs.findOne({
       idConducteur: clientId,
     });
-    const { immatriculation, permis, vehicule, nombrePlace } = req.body;
-    if (!immatriculation || !permis || !vehicule || !nombrePlace) {
+    const { immatriculation, colorVehicule, permis, vehicule, nombrePlace } =
+      req.body;
+    if (
+      !immatriculation ||
+      !permis ||
+      !vehicule ||
+      !nombrePlace ||
+      !colorVehicule
+    ) {
       return res.status(400).json({
         message: "Veuillez renseigner tous les champs !",
         status: false,

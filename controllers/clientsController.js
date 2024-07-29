@@ -650,6 +650,7 @@ export const saveAsConducteur = async (req, res) => {
       permis,
       vehicule,
       nombrePlace,
+      colorVehicule,
     };
 
     const newConducteur = await Conducteurs.create(conducteur);

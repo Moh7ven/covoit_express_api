@@ -209,8 +209,12 @@ export const getTrajetEnCours = async (req, res) => {
     const trajetEnCours = await TrajetsReserver.findOne({
       idClient: clientId,
       active: true,
-    });
-    res.status(200).json({ data: trajetEnCours, status: true });
+    })
+      .populate("idClient")
+      .populate("idTrajet");
+    res
+      .status(200)
+      .json({ data: trajetEnCours, message: "Trajet en cours", status: true });
   } catch (error) {
     console.error(error);
     res
@@ -246,6 +250,25 @@ export const getOneTrajet = async (req, res) => {
     });
     res.status(200).json({ data: oneTrajet, status: true });
   } catch (error) {}
+};
+
+export const getTrajetEnCoursConducteur = async (req, res) => {
+  try {
+    const clientId = req.auth.clientId;
+    const trajetEnCours = await Trajets.findOne({
+      idConducteur: clientId,
+      active: true,
+      terminer: false,
+    }).populate("idClient");
+    res
+      .status(200)
+      .json({ data: trajetEnCours, message: "Trajet en cours", status: true });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(404)
+      .json({ message: "Une erreur s'est produite", status: false });
+  }
 };
 
 export const reserverTrajet = async (req, res) => {
@@ -529,7 +552,7 @@ export const annulerTrajetAjouter = async (req, res) => {
     const { trajetId } = req.params;
     const clientId = req.auth.clientId;
     const trajet = await Trajets.findOne({
-      idTrajet: trajetId,
+      _id: trajetId,
       idConducteur: clientId,
     });
     if (!trajet) {
@@ -593,6 +616,23 @@ export const terminerTrajet = async (req, res) => {
   }
 };
 
+export const getAllTrajetsTerminerByConduc = async (req, res) => {
+  try {
+    const clientId = req.auth.clientId;
+    const trajet = await Trajets.find({
+      idConducteur: clientId,
+      active: false,
+      terminer: true,
+    });
+    res.status(200).json({ data: trajet, status: true });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ message: "Une erreur s'est produite", status: false });
+  }
+};
+
 export const saveAsConducteur = async (req, res) => {
   try {
     const clientId = req.auth.clientId;
@@ -632,7 +672,7 @@ export const saveAsConducteur = async (req, res) => {
 
     if (verifConducteur) {
       return res.status(400).json({
-        message: "Vous avez enregistrer des données de conducteur !",
+        message: "Vous avez déjà enregistrer des données de conducteur !",
         status: false,
       });
     }

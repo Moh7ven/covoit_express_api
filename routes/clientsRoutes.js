@@ -11,6 +11,7 @@ import {
   getAllTrajet,
   getTrajetEnCours,
   getOneTrajet,
+  getTrajetEnCoursConducteur,
   reserverTrajet,
   getTrajetReserver,
   annulerTrajetReserver,
@@ -20,6 +21,8 @@ import {
   historiqueDepenses,
   historiqueGain,
   getAllClientReserveMyTrajet,
+  annulerTrajetAjouter,
+  getAllTrajetsTerminerByConduc,
 } from "../controllers/clientsController.js";
 import multer from "multer";
 import authClient from "../middlewares/authClient.js";
@@ -40,6 +43,20 @@ router.post("/add-trajet", upload.any(), authClient, addTrajet);
 router.get("/get-all-trajets", upload.any(), authClient, getAllTrajet);
 
 router.get("/get-trajets-en-cours", upload.any(), authClient, getTrajetEnCours);
+
+router.get(
+  "/get-trajet-en-cours-conducteur",
+  upload.any(),
+  authClient,
+  getTrajetEnCoursConducteur
+);
+
+router.get(
+  "/get-trajtes-terminer-by-conducteur",
+  upload.any(),
+  authClient,
+  getAllTrajetsTerminerByConduc
+);
 
 router.get(
   "/get-one-trajets-en-cours/:trajetId",
@@ -83,6 +100,13 @@ router.get(
   upload.any(),
   authClient,
   getAllTrajetsAnnuler
+);
+
+router.put(
+  "/annuler-trajet-ajouter/:trajetId",
+  upload.any(),
+  authClient,
+  annulerTrajetAjouter
 );
 
 router.post("/save-as-conducteur", upload.any(), authClient, saveAsConducteur);

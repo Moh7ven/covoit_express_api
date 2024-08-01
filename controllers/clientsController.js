@@ -472,7 +472,13 @@ export const getTrajetReserver = async (req, res) => {
     const trajetReserver = await TrajetsReserver.find({
       idClient: clientId,
       annuler: false,
-    }).populate("idTrajet");
+    }).populate({
+      path: "idTrajet",
+      populate: {
+        path: "idClient",
+        model: "Clients",
+      },
+    });
 
     const trajetReserverActive = trajetReserver.map((trajet) =>
       trajet.idTrajet.active === true ? true : false
@@ -800,6 +806,8 @@ export const searchTrajet = async (req, res) => {
     const trajets = await Trajets.find({
       lieuDepart: { $regex: lieuDepart, $options: "i" },
       lieuArrivee: { $regex: lieuArrivee, $options: "i" },
+      active: true,
+      terminer: false,
     })
       .populate("idClient")
       .populate("idConducteur");

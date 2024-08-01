@@ -436,9 +436,13 @@ export const getAllTrajetsAnnuler = async (req, res) => {
     const trajetAnnuler = await TrajetsReserver.find({
       idClient: clientId,
       annuler: true,
-    })
-      .populate("idTrajet")
-      .populate("idClient");
+    }).populate({
+      path: "idTrajet",
+      populate: {
+        path: "idClient",
+        model: "Clients",
+      },
+    });
     if (trajetAnnuler.length === 0) {
       return res.status(400).json({
         data: [],

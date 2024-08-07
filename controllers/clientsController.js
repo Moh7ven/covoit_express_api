@@ -209,8 +209,12 @@ export const getTrajetEnCours = async (req, res) => {
     const trajetEnCours = await TrajetsReserver.findOne({
       idClient: clientId,
       active: true,
-    });
-    res.status(200).json({ data: trajetEnCours, status: true });
+    })
+      .populate("idClient")
+      .populate("idTrajet");
+    res
+      .status(200)
+      .json({ data: trajetEnCours, message: "Trajet en cours", status: true });
   } catch (error) {
     console.error(error);
     res
@@ -246,6 +250,25 @@ export const getOneTrajet = async (req, res) => {
     });
     res.status(200).json({ data: oneTrajet, status: true });
   } catch (error) {}
+};
+
+export const getTrajetEnCoursConducteur = async (req, res) => {
+  try {
+    const clientId = req.auth.clientId;
+    const trajetEnCours = await Trajets.findOne({
+      idConducteur: clientId,
+      active: true,
+      terminer: false,
+    }).populate("idClient");
+    res
+      .status(200)
+      .json({ data: trajetEnCours, message: "Trajet en cours", status: true });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(404)
+      .json({ message: "Une erreur s'est produite", status: false });
+  }
 };
 
 export const reserverTrajet = async (req, res) => {
@@ -341,6 +364,7 @@ export const annulerTrajetReserver = async (req, res) => {
     const clientId = req.auth.clientId;
     const trajetReserver = await TrajetsReserver.findOne({
       idTrajet: trajetId,
+      annuler: false,
     });
     if (!trajetReserver) {
       return res.status(400).json({
@@ -385,7 +409,8 @@ export const annulerTrajetReserver = async (req, res) => {
 
     const updateTrajetReserver = await TrajetsReserver.findOneAndUpdate(
       { _id: trajetReserver._id },
-      { $set: { annuler: true } }
+      { $set: { annuler: true } },
+      { new: true }
     );
 
     await Trajets.findOneAndUpdate(
@@ -411,9 +436,13 @@ export const getAllTrajetsAnnuler = async (req, res) => {
     const trajetAnnuler = await TrajetsReserver.find({
       idClient: clientId,
       annuler: true,
-    })
-      .populate("idTrajet")
-      .populate("idClient");
+    }).populate({
+      path: "idTrajet",
+      populate: {
+        path: "idClient",
+        model: "Clients",
+      },
+    });
     if (trajetAnnuler.length === 0) {
       return res.status(400).json({
         data: [],
@@ -446,7 +475,14 @@ export const getTrajetReserver = async (req, res) => {
 
     const trajetReserver = await TrajetsReserver.find({
       idClient: clientId,
-    }).populate("idTrajet");
+      annuler: false,
+    }).populate({
+      path: "idTrajet",
+      populate: {
+        path: "idClient",
+        model: "Clients",
+      },
+    });
 
     const trajetReserverActive = trajetReserver.map((trajet) =>
       trajet.idTrajet.active === true ? true : false
@@ -526,7 +562,7 @@ export const annulerTrajetAjouter = async (req, res) => {
     const { trajetId } = req.params;
     const clientId = req.auth.clientId;
     const trajet = await Trajets.findOne({
-      idTrajet: trajetId,
+      _id: trajetId,
       idConducteur: clientId,
     });
     if (!trajet) {
@@ -590,6 +626,23 @@ export const terminerTrajet = async (req, res) => {
   }
 };
 
+export const getAllTrajetsTerminerByConduc = async (req, res) => {
+  try {
+    const clientId = req.auth.clientId;
+    const trajet = await Trajets.find({
+      idConducteur: clientId,
+      active: false,
+      terminer: true,
+    });
+    res.status(200).json({ data: trajet, status: true });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ message: "Une erreur s'est produite", status: false });
+  }
+};
+
 export const saveAsConducteur = async (req, res) => {
   try {
     const clientId = req.auth.clientId;
@@ -598,8 +651,15 @@ export const saveAsConducteur = async (req, res) => {
     const verifConducteur = await Conducteurs.findOne({
       idConducteur: clientId,
     });
-    const { immatriculation, permis, vehicule, nombrePlace } = req.body;
-    if (!immatriculation || !permis || !vehicule || !nombrePlace) {
+    const { immatriculation, colorVehicule, permis, vehicule, nombrePlace } =
+      req.body;
+    if (
+      !immatriculation ||
+      !permis ||
+      !vehicule ||
+      !nombrePlace ||
+      !colorVehicule
+    ) {
       return res.status(400).json({
         message: "Veuillez renseigner tous les champs !",
         status: false,
@@ -622,7 +682,7 @@ export const saveAsConducteur = async (req, res) => {
 
     if (verifConducteur) {
       return res.status(400).json({
-        message: "Vous avez enregistrer des données de conducteur !",
+        message: "Vous avez déjà enregistrer des données de conducteur !",
         status: false,
       });
     }
@@ -640,6 +700,7 @@ export const saveAsConducteur = async (req, res) => {
       permis,
       vehicule,
       nombrePlace,
+      colorVehicule,
     };
 
     const newConducteur = await Conducteurs.create(conducteur);
@@ -749,7 +810,11 @@ export const searchTrajet = async (req, res) => {
     const trajets = await Trajets.find({
       lieuDepart: { $regex: lieuDepart, $options: "i" },
       lieuArrivee: { $regex: lieuArrivee, $options: "i" },
-    });
+      active: true,
+      terminer: false,
+    })
+      .populate("idClient")
+      .populate("idConducteur");
 
     if (!trajets) {
       return res.status(404).json({
